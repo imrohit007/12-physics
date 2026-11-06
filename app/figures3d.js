@@ -58,7 +58,7 @@ function bOersted(c) {
     if (p.on) ph -= dir * (0.5 + p.I * 0.06) * dt;
     beads.update(ph);
     ia.set(V(0.4, dir === 1 ? 1.4 : 3, 0), V(0, dir * 1.3, 0)); ia.g.visible = p.on;
-    c.out({ Bw });
+    c.out({ Bw, defl: Math.atan2(Bw, BE) / D2R });
     if (p.on && p.rev && Bw > 4 * BE && worst < 0.08) c.done();
   };
 }
@@ -69,7 +69,7 @@ export function FigOersted({ p, set, done }) {
     <div className="ctl">
       <Slide label="Current I" min={0} max={20} step={0.5} value={p.I} onChange={(I) => set({ I })} show={(v) => v.toFixed(1) + ' A'} />
       <Slide label="Ring radius r" min={1} max={4} step={0.1} value={p.r} onChange={(r) => set({ r })} show={(v) => v.toFixed(1) + ' cm'} />
-      <Readout>{p.on ? <>Current {p.rev ? 'down' : 'up'} the wire. Its field at the ring: <b>{sci(o.Bw)} T</b> · Earth's field: 3.0 × 10<sup>−5</sup> T</> : 'Switch open: every needle points north.'}</Readout>
+      <Readout>{p.on ? <>Current {p.rev ? 'down' : 'up'} the wire. Wire's field at the ring B = 2×10<sup>−7</sup> I/r = <b>{sci(o.Bw)} T</b> vs Earth's 3.0 × 10<sup>−5</sup> T → needles east/west of the wire turn <b>{Math.round(o.defl ?? 0)}°</b> from north</> : 'Switch open: every needle points north.'}</Readout>
     </div>
   </>);
 }
@@ -93,8 +93,10 @@ function bLorentz(c) {
   return (dt, t, p) => {
     const th = p.th * D2R, ph = p.ph * D2R, sg = p.q ? -1 : 1;
     const v = V(Math.sin(th) * Math.cos(ph), Math.cos(th), Math.sin(th) * Math.sin(ph));
-    const F = v.clone().cross(V(0, 1, 0)).multiplyScalar(sg); // F = q v × B
-    va.set(O, v.clone().multiplyScalar(2.3)); Fa.set(O, F.clone().multiplyScalar(2.3));
+    const F = v.clone().cross(V(0, 1, 0)).multiplyScalar(sg); // direction of F = q v × B
+    const k = (p.v / 1) * (p.B / 0.01);                       // |F| ∝ v B sin θ
+    va.set(O, v.clone().multiplyScalar(0.6 + 1.2 * p.v)); Fa.set(O, F.clone().multiplyScalar(0.9 * k));
+    opac(fl, 0.1 + 0.45 * (p.B / 0.02));
     q.material.color.set(sg > 0 ? RED : BLUE); qs.element.textContent = sg > 0 ? '+q (proton)' : '−q (electron)';
     const n = V(0, 1, 0).cross(v);
     pl.visible = n.length() > 0.03;
@@ -102,7 +104,7 @@ function bLorentz(c) {
     const ax = n.length() > 0.03 ? n.normalize() : V(1, 0, 0);
     setLine(arc, Array.from({ length: 25 }, (_, i) => V(0, 0.95, 0).applyAxisAngle(ax, (th * i) / 24).add(O)));
     tl.position.copy(V(0, 1.25, 0).applyAxisAngle(ax, th / 2).add(O));
-    c.out({ F: 1.6e-19 * 1e6 * 0.01 * Math.sin(th), F3: F });
+    c.out({ F: 1.6e-19 * p.v * 1e6 * p.B * Math.sin(th), F3: F });
     if (p.th < 3 || p.th > 177) c.done();
   };
 }
@@ -114,8 +116,10 @@ export function FigLorentz({ p, set, done }) {
     <div className="ctl">
       <Slide label="Angle θ between v and B" min={0} max={180} step={1} value={p.th} onChange={(th) => set({ th })} show={(v) => v + '°'} />
       <Slide label="Turn v round B" min={0} max={360} step={1} value={p.ph} onChange={(ph) => set({ ph })} show={(v) => v + '°'} />
+      <Slide label="Speed v" min={0} max={2} step={0.05} value={p.v} onChange={(v) => set({ v })} show={(x) => x.toFixed(2) + ' × 10⁶ m/s'} />
+      <Slide label="Field B" min={0} max={0.02} step={0.0005} value={p.B} onChange={(B) => set({ B })} show={(x) => (x * 1000).toFixed(1) + ' mT'} />
       <Pick label="Charge" opts={['proton', 'electron']} value={p.q} onChange={(q) => set({ q })} />
-      <Readout>v = 10<sup>6</sup> m/s, B = 0.01 T: F = qvB sin θ = <b>{sci(o.F)} N</b>, along the <b>{dirName(o.F3)}</b></Readout>
+      <Readout>F = qvB sin θ = <b>{sci(o.F)} N</b>, along the <b>{dirName(o.F3)}</b></Readout>
     </div>
   </>);
 }
@@ -245,7 +249,7 @@ function bBiot(c) {
     const Pp = O.clone().addScaledVector(rh, ru); P.position.copy(Pp);
     setLine(rl, [O, Pp]); rlab.position.copy(O.clone().addScaledVector(rh, ru * 0.55).add(V(0, 0.25, 0)));
     const dir = V(1, 0, 0).cross(rh); // dl × r
-    const s = Math.sin(th), len = Math.min(2.4, (0.5 * s) / (p.r * p.r));
+    const s = Math.sin(th), len = (0.27 * s) / (p.r * p.r); // ∝ sin θ / r²
     dB.set(Pp, dir.clone().normalize().multiplyScalar(len));
     const cx = O.x + ru * Math.cos(th), rho = ru * s;
     setLine(ring, Array.from({ length: 65 }, (_, i) => { const a = (i / 64) * Math.PI * 2; return V(cx, O.y + rho * Math.cos(a), rho * Math.sin(a)); }));
@@ -262,7 +266,7 @@ export function FigBiot({ p, set, done }) {
     <Scene3D build={bBiot} p={p} set={set} out={setO} done={done} cam={[6, 6.5, 11]} target={[0, 2.4, 0]} />
     <div className="ctl">
       <Slide label="Angle θ (dl to r)" min={0} max={180} step={1} value={p.th} onChange={(th) => set({ th })} show={(v) => v + '°'} />
-      <Slide label="Distance r" min={0.2} max={1} step={0.01} value={p.r} onChange={(r) => set({ r })} show={(v) => v.toFixed(2) + ' m'} />
+      <Slide label="Distance r" min={0.3} max={1} step={0.01} value={p.r} onChange={(r) => set({ r })} show={(v) => v.toFixed(2) + ' m'} />
       <Slide label="Walk P round the wire" min={0} max={360} step={1} value={p.ph} onChange={(ph) => set({ ph })} show={(v) => v + '°'} />
       <Readout>I = 10 A, dl = 1 cm: dB = (μ₀/4π) I dl sin θ / r² = <b>{sci(o.B)} T</b>, along the {dirName(o.D)}</Readout>
     </div>
@@ -304,7 +308,7 @@ function bLoop(c) {
     }
     ph -= 0.8 * dt; beads.update(ph);
     const u = p.x, ratio = Math.pow(1 + u * u, -1.5), Pp = V(C.x + u * R, C.y, 0);
-    probe.position.copy(Pp); Ba.set(Pp.clone().add(V(0, 0, 0.3)), V(sign * (0.3 + 2.4 * ratio), 0, 0));
+    probe.position.copy(Pp); Ba.set(Pp.clone().add(V(0, 0, 0.3)), V(sign * 2.8 * ratio * (p.N / 100), 0, 0)); // ∝ N I R²/(x²+R²)^1.5
     const Rm = 0.1, B0 = (MU0 * p.N * 1) / (2 * Rm), B = B0 * ratio;
     plab.element.textContent = ratio.toFixed(3) + ' B₀';
     c.out({ ratio, B, B0 });
@@ -360,7 +364,7 @@ function bAmpere(c) {
     fil.instanceMatrix.needsUpdate = true;
     if (ru !== lastRu) { loop.geometry.dispose(); loop.geometry = new THREE.TorusGeometry(ru, 0.045, 8, 96); lastRu = ru; }
     const am = 0.005, rm = p.r / 100, B = rm < am ? (MU0 * p.I * rm) / (2 * Math.PI * am * am) : (MU0 * p.I) / (2 * Math.PI * rm);
-    const Ba = (MU0 * p.I) / (2 * Math.PI * am), len = Math.min(1.6, (B / Math.max(Ba, 1e-12)) * 1.3);
+    const Ba = (MU0 * p.I) / (2 * Math.PI * am), len = 1.8 * B / ((MU0 * 10) / (2 * Math.PI * am)); // ∝ B, full length at 10 A on the surface
     Bs.forEach((g, k) => { const t2 = (k / 8) * Math.PI * 2; g.set(V(ru * Math.cos(t2), 0.75, ru * Math.sin(t2)), V(Math.sin(t2), 0, -Math.cos(t2)).multiplyScalar(p.I ? len : 0)); });
     rl.position.set(ru * 0.5, 0.95, 0); c3.move(V(-ru, 0.75, 0), V(-ru - 0.8, 1.9, 0.6));
     ph -= (0.3 + p.I * 0.08) * dt * (p.I > 0); beads.update(ph);
@@ -469,8 +473,9 @@ function bParallel(c) {
     ba.path(A, 0.3).update(-ph); bb2.path(Bp, 0.3).update(p.opp ? ph : -ph);
     circ.forEach((l, k) => { const r = 0.5 + k * 0.6; setLine(l, Array.from({ length: 65 }, (_, i) => { const a2 = (i / 64) * Math.PI * 2; return V(xa + da + r * Math.cos(a2), 3.05, r * Math.sin(a2)); })); });
     const s = p.I > 0 ? 1 : 0;
-    Bab.set(V(xb + db, 3.05, 0), Ba.clone().normalize().multiplyScalar(1.1 * s));
-    Fb.set(V(xb + db, 2.4, 0), fb.clone().normalize().multiplyScalar(1.2 * s)); Fa.set(V(xa + da, 2.4, 0), fa.clone().normalize().multiplyScalar(1.2 * s));
+    const fs = 1.4 / 6.7e-3, bsc = 1.3 / 2e-4;                 // arrow lengths ∝ B and ∝ f (max at 20 A, 2 cm)
+    Bab.set(V(xb + db, 3.05, 0), Ba.clone().multiplyScalar(bsc * s));
+    Fb.set(V(xb + db, 2.4, 0), fb.clone().multiplyScalar(fs * s)); Fa.set(V(xa + da, 2.4, 0), fa.clone().multiplyScalar(fs * s));
     Ia.set(V(xa - 0.4, 4.6, 0), V(0, -0.9, 0)); Ib.set(V(xb + 0.4, p.opp ? 3.7 : 4.6, 0), V(0, p.opp ? 0.9 : -0.9, 0));
     swl.element.textContent = p.opp ? 'b reversed' : 'b same way';
     c1.move(V(xa + da, 4.2, 0), V(xa - 1.4, 4.8, 0.6)); c2.move(V(xb + db, 1.6, 0), V(xb + 1.4, 1.2, 0.8));
@@ -523,7 +528,7 @@ function bTorque(c) {
     if (p.run) { w += (tau.y / J - 0.7 * w) * dt; psi += w * dt; }
     coil.rotation.y = psi;
     const W = C.map((q) => q.clone().applyAxisAngle(V(0, 1, 0), psi).add(V(0, cy, 0)));
-    W.forEach((q, i) => { const r = W[(i + 1) % 4], l = r.clone().sub(q), F = l.clone().normalize().cross(V(1, 0, 0)).multiplyScalar(I ? 0.5 + I * 0.45 : 0); Fs[i].set(q.clone().add(r).multiplyScalar(0.5), F); });
+    W.forEach((q, i) => { const r = W[(i + 1) % 4], l = r.clone().sub(q), F = l.clone().normalize().cross(V(1, 0, 0)).multiplyScalar(0.018 * p.N * I); /* I l × B, ∝ N I */ Fs[i].set(q.clone().add(r).multiplyScalar(0.5), F); });
     ma.set(V(0, cy, 0), n.clone().multiplyScalar(2.3));
     if (I) ph -= I * 0.8 * dt; beads.update(ph);
     sw.set(p.run, dt);
@@ -629,7 +634,7 @@ function bGalvo(c) {
     w += (40 * (tgt - phi) - 7 * w) * dt; phi += w * dt;
     const ang = (phi * 50 / 30) * D2R;
     mov.rotation.y = ang; springG.rotation.y = ang * 0.6;
-    const sg = Math.sign(p.I), mag = Math.min(1.4, 0.4 + Math.abs(p.I) / 40);
+    const sg = Math.sign(p.I), mag = Math.abs(p.I) * p.N / 3500; /* NIlB on each side */
     [0, 1].forEach((k) => { const x = k ? 1.12 : -1.12, pos = V(x, cy, 0).applyAxisAngle(V(0, 1, 0), ang), tdir = V(0, 0, k ? -1 : 1).applyAxisAngle(V(0, 1, 0), ang); Fs[k].set(pos, tdir.multiplyScalar(sg * mag * (p.I ? 1 : 0))); });
     c.out({ phi });
     if (p.I === 10 && Math.abs(phi - 20) < 0.3 && Math.abs(w) < 0.5) c.done();

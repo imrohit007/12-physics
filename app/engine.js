@@ -279,7 +279,7 @@ export function Scene3D({ build, p, set, out, done, cam = [7, 6, 10], target = [
     const camera = new THREE.PerspectiveCamera(30, W / H, 0.1, 300);
     camera.position.set(...cam).sub(V(...target)).multiplyScalar(1.3).add(V(...target));
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(...target); controls.enableDamping = true; controls.enablePan = false;
+    controls.target.set(...target); controls.enableDamping = true; controls.enablePan = false; controls.enableZoom = false;
     controls.minDistance = minD; controls.maxDistance = maxD; controls.maxPolarAngle = Math.PI * 0.495;
     controls.update();
 
