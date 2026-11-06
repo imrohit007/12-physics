@@ -24,7 +24,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
     radial-gradient(ellipse 80% 70% at 50% 40%, transparent 30%, rgba(0, 0, 0, .55) 100%),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='900'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.004 0.09' numOctaves='4' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.25 0 0 0 0 0.14 0 0 0 0 0.06 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E"),
     linear-gradient(100deg, #5b3a22, #7c5235 30%, #6a4329 55%, #845b3b 80%, #5d3c24);
-  background-size: auto, 900px 900px, auto;
+  background-size: auto, 920px 920px, auto;
 }
 .lamp {
   position: absolute; inset: 0; pointer-events: none; z-index: 1;
@@ -66,7 +66,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* ── the book (desktop: 3D) ── */
 .stage {
-  position: absolute; left: 50%; top: 47%; width: 1480px; height: 860px; z-index: 3;
+  position: absolute; left: 50%; top: 47%; width: 1480px; height: 960px; z-index: 3;
   transform: translate(-50%, -50%) scale(var(--s));
   perspective: 2400px; perspective-origin: 50% 10%;
 }
@@ -79,12 +79,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .block { position: absolute; top: 18px; bottom: -8px; width: 728px; border-radius: 3px; background: #e9dcc2;
   box-shadow: 0 2px 0 #ddd0b5, 0 4px 0 #efe3cb, 0 6px 0 #d8caae, 0 8px 0 #eadfc8, 0 10px 0 #cfc1a4; }
 .block.l { left: 12px; } .block.r { right: 12px; }
-.slot { position: absolute; top: 20px; width: 720px; height: 820px; }
+.slot { position: absolute; top: 20px; width: 720px; height: 920px; }
 .slot.l { left: 20px; } .slot.r { left: 740px; }
-.gutter { position: absolute; left: 728px; top: 20px; width: 24px; height: 820px; pointer-events: none;
+.gutter { position: absolute; left: 728px; top: 20px; width: 24px; height: 920px; pointer-events: none;
   background: linear-gradient(90deg, transparent, rgba(80, 55, 20, .25) 45%, rgba(80, 55, 20, .3) 50%, rgba(80, 55, 20, .25) 55%, transparent); }
 
-.leaf { position: absolute; left: 740px; top: 20px; width: 720px; height: 820px; transform-origin: 0 50%; transform-style: preserve-3d; pointer-events: none; z-index: 5; }
+.leaf { position: absolute; left: 740px; top: 20px; width: 720px; height: 920px; transform-origin: 0 50%; transform-style: preserve-3d; pointer-events: none; z-index: 5; }
 .leaf.next { animation: turnNext .95s cubic-bezier(.45, .05, .35, 1) forwards; }
 .leaf.prev { animation: turnPrev .95s cubic-bezier(.45, .05, .35, 1) forwards; }
 @keyframes turnNext { from { transform: rotateY(0) } 50% { transform: rotateY(-90deg) translateZ(30px) } to { transform: rotateY(-180deg) } }
@@ -95,7 +95,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* ── a page ── */
 .pg {
-  position: relative; width: 720px; height: 820px; overflow: hidden;
+  position: relative; width: 720px; height: 920px; overflow: hidden;
   background-color: var(--paper);
   background-image:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.35 0 0 0 0 0.2 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -225,3 +225,38 @@ input[type=range]::-moz-range-thumb { width: 13px; height: 13px; border-radius: 
 .flat .foot { display: none; }
 @media (max-width: 520px) { .flat .pill.tools button { width: 32px; } }
 .flat .stamp { left: auto; right: 40px; bottom: 50px; }
+
+/* ── 3D figures ── */
+.scene3 { position: relative; width: 100%; border-radius: 6px; overflow: hidden; }
+.scene3 canvas { display: block; touch-action: none; }
+.scene3 img { width: 100%; height: 100%; display: block; }
+.labels3 { position: absolute; inset: 0; pointer-events: none; }
+.num3 { font-family: var(--hand); font-size: 22px; color: var(--ink); line-height: 1; }
+.vec3 { font-family: var(--serif); font-style: italic; font-size: 17px; font-weight: 600; text-shadow: 0 0 3px #fff, 0 0 3px #fff; }
+.l3 { font-size: 13px; color: var(--ink); text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; white-space: nowrap; }
+.l3.small { font-size: 11px; font-style: italic; color: #5d564b; }
+.sign3 { font-weight: 700; font-size: 15px; color: var(--ink); text-shadow: 0 0 3px #fff; }
+.pole3 { font-weight: 700; font-size: 26px; color: rgba(42, 39, 35, .85); }
+.tick3 { font-size: 11px; color: var(--ink); }
+.lcd3 { font-size: 12px; background: #fbfaf6; border: 1px solid var(--ink); border-radius: 4px; padding: 2px 6px; white-space: nowrap; }
+.graph { flex: 0 0 auto; }
+.graph .gt { font-size: 10px; font-style: italic; fill: #5d564b; }
+.drag { color: #9b8f79; }
+.exbox { margin-top: 10px; padding: 8px 12px; border: 1px dashed #b9ab8e; border-radius: 6px; font-size: 12.5px; line-height: 1.4; cursor: pointer; background: rgba(255, 255, 255, .25); }
+.exbox .kicker { display: inline; margin: 0 6px 0 0; }
+.exbox .show, .ex .show { font-family: var(--hand); font-size: 17px; color: var(--red); }
+.exa { margin-top: 6px; padding-top: 6px; border-top: 1px solid #d8ccb2; font-style: italic; }
+.sub {
+  position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); z-index: 30; max-width: min(860px, 92vw);
+  padding: 10px 18px; border-radius: 12px; background: rgba(28, 24, 20, .82); color: #fbf6ec; font-size: 17px; line-height: 1.4; text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .35);
+}
+.pill.tools button.on:first-child { background: rgba(181, 57, 43, .12); }
+.sum .main { grid-column: 1 / -1; }
+.sumlist { padding-left: 22px; font-size: 14px; line-height: 1.45; margin: 4px 0 8px; }
+.sumlist li { margin-bottom: 5px; }
+.ponder { font-size: 13.5px; line-height: 1.45; }
+.ex { list-style: none; padding: 0; margin: 6px 0; font-size: 13px; line-height: 1.38; }
+.ex li { padding: 5px 0; border-bottom: 1px dotted #cdbf9f; cursor: pointer; }
+.ex li > b { color: var(--red); margin-right: 4px; }
+.ex .ans { display: block; margin-top: 3px; font-style: italic; color: #2f4c9a; }
